@@ -13,5 +13,6 @@ class Book extends Model
         'pengarang',
         'penerbit',
         'tahun',
+        'returned_at',
     ];
 }

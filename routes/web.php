@@ -14,6 +14,24 @@ Route::get("/", function () {
 });
 
 Route::get('/home', function () {
+    $user = Auth::user();
+    
+    if ($user->role == 'user') {
+        $member = $user->member;
+        
+        // Available books (not borrowed)
+        $borrowedIds = Transaction::whereNull('returned_at')->pluck('book_id');
+        $availableBooks = Book::whereNotIn('id', $borrowedIds)->get();
+        
+        // User's current books
+        $myBooks = Transaction::with('book')
+            ->where('member_id', $member->id)
+            ->whereNull('returned_at')
+            ->get();
+            
+        return view('home', compact('member', 'availableBooks', 'myBooks'));
+    }
+    
     return view('home');
 })->middleware('auth');
 
@@ -67,11 +85,6 @@ Route::post('/logout', function () {
     request()->session()->regenerateToken();                             
     return redirect('/login');
 })->middleware('auth')->name('logout');
-
-Route::get('/borrow-books', function () {
-    $books = Book::all();
-    return view('borrow-books', compact('books'));
-})->middleware('auth')->name('borrow-books');
 
 Route::get('/manage-books', function () {
     $books = Book::all();
@@ -241,4 +254,29 @@ Route::delete('/delete-member', function (Request $request) {
     $member->delete();
     
     return redirect()->back()->with('status', 'Member deleted successfully!');
+})->middleware('auth');
+
+// Borrow book
+Route::post('/borrow', function (Request $request) {
+    $member = Auth::user()->member;
+    
+    $data = $request->validate([
+        'book_id' => 'required|exists:books,id',
+        'tanngal_pinjam' => 'required|date',
+        'tanggal_kembali' => 'required|date|after_or_equal:tanngal_pinjam',
+    ]);
+    
+    $data['member_id'] = $member->id;
+    Transaction::create($data);
+    
+    return redirect('/home')->with('status', 'Book borrowed!');
+})->middleware('auth');
+
+// Return book
+Route::put('/return/{id}', function ($id) {
+    $transaction = Transaction::findOrFail($id);
+    $transaction->returned_at = now();
+    $transaction->save();
+    
+    return redirect('/home')->with('status', 'Book returned!');
 })->middleware('auth');
