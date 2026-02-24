@@ -16,9 +16,7 @@
     
     <div class="container mt-4">
         @if (auth()->user()->role == 'user')
-            <!-- User Section - All in one place -->
             <div class="row">
-                <!-- Left Side: Borrow Form -->
                 <div class="col-md-5">
                     <div class="card">
                         <div class="card-header bg-primary text-white">
@@ -60,7 +58,6 @@
                     </div>
                 </div>
                 
-                <!-- Right Side: My Books -->
                 <div class="col-md-7">
                     <div class="card">
                         <div class="card-header bg-info text-white">
@@ -107,7 +104,6 @@
                 </div>
             </div>
             
-            <!-- Logout Button -->
             <div class="mt-3 text-end">
                 <form method="POST" action="/logout">
                     @csrf
@@ -116,7 +112,6 @@
             </div>
             
         @else
-            <!-- Admin Section -->
             <div class="d-flex justify-content-center gap-3">
                 <a class="btn btn-primary" href="/manage-books">Manage Books</a>
                 <a class="btn btn-primary" href="/manage-transactions">Manage Transactions</a>

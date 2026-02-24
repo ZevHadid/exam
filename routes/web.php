@@ -19,11 +19,9 @@ Route::get('/home', function () {
     if ($user->role == 'user') {
         $member = $user->member;
         
-        // Available books (not borrowed)
         $borrowedIds = Transaction::whereNull('returned_at')->pluck('book_id');
         $availableBooks = Book::whereNotIn('id', $borrowedIds)->get();
         
-        // User's current books
         $myBooks = Transaction::with('book')
             ->where('member_id', $member->id)
             ->whereNull('returned_at')
@@ -149,8 +147,8 @@ Route::put('/edit-transaction', function (Request $request) {
         'id' => 'required|exists:transactions,id',
         'member_id' => 'required|exists:members,id',
         'book_id' => 'required|exists:books,id',
-        'tanngal_pinjam' => 'required|date',  // Changed to match DB column
-        'tanggal_kembali' => 'required|date|after_or_equal:tanngal_pinjam',  // Changed reference
+        'tanngal_pinjam' => 'required|date',
+        'tanggal_kembali' => 'required|date|after_or_equal:tanngal_pinjam',
     ]);
     
     $transaction = Transaction::findOrFail($request->id);
@@ -172,7 +170,6 @@ Route::get('/manage-members', function () {
     return view('manage-members', compact('users', 'members'));
 })->middleware('auth')->name('manage-members');
 
-// Create User
 Route::post('/new-user', function (Request $request) {
     $data = $request->validate([
         'name' => 'required|string|max:255',
@@ -186,7 +183,6 @@ Route::post('/new-user', function (Request $request) {
     return redirect()->back()->with('status', 'User added successfully!');
 })->middleware('auth');
 
-// Edit User
 Route::put('/edit-user', function (Request $request) {
     $data = $request->validate([
         'id' => 'required|exists:users,id',
@@ -197,7 +193,6 @@ Route::put('/edit-user', function (Request $request) {
     $user = User::findOrFail($request->id);
     $user->update($data);
     
-    // Only update password if provided
     if ($request->filled('password')) {
         $request->validate(['password' => 'string|min:6']);
         $user->password = Hash::make($request->password);
@@ -207,7 +202,6 @@ Route::put('/edit-user', function (Request $request) {
     return redirect()->back()->with('status', 'User updated successfully!');
 })->middleware('auth');
 
-// Delete User
 Route::delete('/delete-user', function (Request $request) {
     $user = User::findOrFail($request->id);
     $user->delete();
@@ -215,8 +209,6 @@ Route::delete('/delete-user', function (Request $request) {
     return redirect()->back()->with('status', 'User deleted successfully!');
 })->middleware('auth');
 
-// ============ MEMBER CRUD ============
-// Create Member
 Route::post('/new-member', function (Request $request) {
     $data = $request->validate([
         'user_id' => 'nullable|exists:users,id',
@@ -231,7 +223,6 @@ Route::post('/new-member', function (Request $request) {
     return redirect()->back()->with('status', 'Member added successfully!');
 })->middleware('auth');
 
-// Edit Member
 Route::put('/edit-member', function (Request $request) {
     $data = $request->validate([
         'id' => 'required|exists:members,id',
@@ -248,7 +239,6 @@ Route::put('/edit-member', function (Request $request) {
     return redirect()->back()->with('status', 'Member updated successfully!');
 })->middleware('auth');
 
-// Delete Member
 Route::delete('/delete-member', function (Request $request) {
     $member = Member::findOrFail($request->id);
     $member->delete();
@@ -256,7 +246,6 @@ Route::delete('/delete-member', function (Request $request) {
     return redirect()->back()->with('status', 'Member deleted successfully!');
 })->middleware('auth');
 
-// Borrow book
 Route::post('/borrow', function (Request $request) {
     $member = Auth::user()->member;
     
@@ -272,7 +261,6 @@ Route::post('/borrow', function (Request $request) {
     return redirect('/home')->with('status', 'Book borrowed!');
 })->middleware('auth');
 
-// Return book
 Route::put('/return/{id}', function ($id) {
     $transaction = Transaction::findOrFail($id);
     $transaction->returned_at = now();
